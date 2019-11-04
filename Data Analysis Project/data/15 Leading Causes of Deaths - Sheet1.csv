@@ -1,0 +1,16 @@
+15 Leading Causes of Death (Infants),15 Leading Causes of Death (Infants) Code,Deaths,Births,Death Rate
+"#Congenital malformations, deformations and chromosomal abnormalities (Q00-Q99)",GR130-118,4596,3855500,1.19
+"#Disorders related to short gestation and low birth weight, not elsewhere classified (P07)",GR130-088,3757,3855500,0.97
+#Newborn affected by maternal complications of pregnancy (P01),GR130-074,1436,3855500,0.37
+#Sudden infant death syndrome (R95),GR130-135,1360,3855500,0.35
+#Accidents (unintentional injuries) (V01-X59),GR130-139,1313,3855500,0.34
+"#Newborn affected by complications of placenta, cord and membranes (P02)",GR130-079,840,3855500,0.22
+#Bacterial sepsis of newborn (P36),GR130-106,593,3855500,0.15
+#Diseases of the circulatory system (I00-I99),GR130-046,447,3855500,0.12
+#Respiratory distress of newborn (P22),GR130-096,441,3855500,0.11
+"#Neonatal hemorrhage (P50-P52,P54)",GR130-110,382,3855500,0.1
+#Necrotizing enterocolitis of newborn (P77),GR130-115,337,3855500,0.09
+#Intrauterine hypoxia and birth asphyxia (P20-P21),GR130-093,326,3855500,0.08
+"#Assault (homicide) (*U01,X85-Y09)",GR130-152,301,3855500,0.08
+#Atelectasis (P28.0-P28.1),GR130-103,257,3855500,0.07
+#Diarrhea and gastroenteritis of infectious origin (A09),GR130-003,180,3855500,0.05

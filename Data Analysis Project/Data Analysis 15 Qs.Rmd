@@ -1,0 +1,247 @@
+---
+title: "Data Analysis Project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# If you don't have one or both of these these, use install.packages()
+
+# install.packages('arcos')
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(arcos)
+library(scales)
+library(ggrepel)
+library(tidycensus)
+```
+
+```{r}
+# store a password as an object called key
+key <- "uO4EK6I"
+```
+
+```{r}
+# 1. Data of children under 6 pulled from the census. Could potentially be helpful when narrowing down the definition of a child.
+
+under_6 <- get_acs(geography = "county", variables = c("B05009_002"), survey="acs5")
+
+```
+
+```{r}
+# 2. Is the Enhanced State Opioid Overdose Surveillance. This data informs whether or not a state is funded by this program. This program is a "more timely and comprehensive data on fatal and nonfatal opioid overdoses and risk factors associated with fatal overdoses."
+
+esoos <- read.csv(file="data/ESOOS.csv", header=TRUE, sep=",")
+```
+
+```{r}
+
+# 3. Pulled from the WONDER CDC website, this data provides the top 15 leading causes of death. Pulled this data for reference.
+
+LeadingCauseofDeath <- read.csv(file="data/15 Leading Causes of Deaths - Sheet1.csv", header=TRUE, sep=",")
+```
+
+```{r}
+
+# 4. Pulled from the WONDER CDC website, this data provides the infant birth data including any defects and complications from 2016-2018.
+
+InfantBirths <- read.csv(file="data/Infant Births - 2016-2018.csv", header=TRUE, sep=",")
+```
+
+```{r}
+
+# 5. Pulled from the WONDER CDC website, this data provides the infant causes of deaths from 2007-2017
+
+InfantDeaths <- read.csv(file="data/Infant Deaths - 2007-2017.csv", header=TRUE, sep=",")
+```
+
+```{r}
+# 6. What is the pills per person per month for Utah? White women had the highest fertility rate in Utah in 2017 based on CDC data.
+
+utah_annual_pills <- combined_buyer_annual(state = "UT", key = key)
+
+InfantBirths %>%
+  filter(State.of.Residence == "Utah") %>%
+  arrange(desc(Births))
+
+#Salt Lake City, Utah had the highest amount of births with 15,998. This is probably also due to the population of this city being the highest. Something to look into.
+```
+
+```{r}
+# 7. What is the annual population for Utah? *Would need to seperate female vs. male.
+
+utah_annual_population <- county_population(state = "UT", key = key)
+
+utah_annual_population %>%
+  filter(county_name == "Salt Lake")
+
+# There has been a steady increase in Salt Lake City's population from 2006 to 2012.
+```
+
+```{r}
+# 8. New York and Kentucky have the highest rate for homeless children. What is the pills per person per month for NY? Kentucky?
+
+ny_annual_pills <- combined_buyer_annual(state = "NY", key = key)
+
+kentucky_annual_pills <- combined_buyer_annual(state = "KY", key = key)
+
+# How many births were in NY
+
+InfantBirths %>%
+  filter(State.of.Residence == "New York") %>%
+  arrange(desc(Births))
+
+# Kings County, NY had the highest births with 38,574 from 2007-2017.
+
+```
+
+```{r}
+# 9. Mississippi has the highest poverty rate. How many pills were shipped into Mississippi?
+
+mississippi_annual_pills <- combined_buyer_annual(state = "MS", key = key)
+
+mississippi_annual_pills %>%
+  arrange(desc(DOSAGE_UNIT))
+
+# Lauderdale County is consistently one to have a lot of pills shipped to, with the highest being 1,756,500 pills in 2011. How many births happened in Lauderdale County?
+
+# InfantBirths %>%
+  # filter(State.of.Residence == "Mississippi") %>%
+  # arrange(desc(Births))
+
+# This data set has Lauderdale County listed under "Unidentified Counties" therefore we cannot make a solid conclusion. Although 25,808 births were recorded in this category.
+  
+```
+
+```{r}
+# 10. Maryland is one of the states with the lowest fertility rate. How many pills did they receive annually?
+
+maryland_annual_pills <- combined_buyer_annual(state = "MD", key = key)
+
+maryland_annual_pills %>%
+  arrange(desc(DOSAGE_UNIT))
+
+# Baltimore City County received the most number of pills in 2006 with 6,133,600 dosage units. Let's look into the infant birth rate.
+
+InfantBirths %>%
+  filter(State.of.Residence == "Maryland") %>%
+  arrange(desc(Births))
+
+# 7,681 births recorded in Baltimore City County from 2007 - 2017. How many deaths?
+
+# InfantDeaths %>%
+  # filter(State == "Maryland") %>%
+  # arrange(desc(Births))
+
+# 14 infant deaths linked to symptoms, signs and abnormal clinical and laboratory findings. Will need to identify what this specifically means for this data set.
+
+```
+
+```{r}
+# 11. Which county had the highest amount of pills delivered?
+highest_pills <- summarized_county_annual(key = key) %>%
+  arrange(desc(DOSAGE_UNIT)) %>%
+  janitor::clean_names(case = "snake")
+
+# Will need to figure out this number based on the population of the city as well.
+```
+
+```{r}
+# 12. Data join population total and pills total to get average pills per person.
+
+# highest_pills %>%
+  #group_by(buyer_state) %>%
+  #summarise(total_pills=sum(dosage_unit)) %>%
+  #full_join(state_population_per_year, by="buyer_state") %>%
+  #mutate(average_pills_person = round((total_pills/population_average),2)) %>%
+  #arrange(desc(average_pills_person))
+
+# WV had the highest average pills per person.
+```
+
+```{r}
+# 13. Allegany County, Maryland had one of the highest pills per person average. Look into the data further.
+
+arcos_county_pills_per_year <- summarized_county_annual(key = key) %>%
+  clean_names()
+
+allegany_pills_per_year <- arcos_county_pills_per_year %>%
+  filter(buyer_state == "MD", buyer_county == "ALLEGANY") %>%
+  select(year, dosage_unit)
+```
+
+```{r}
+# 14. Looking into the relationship between low income counties and the opioid usage. Allegany has a very low median household income, but a high pills per person average. It would be a point of interest to look into a specific year where opioid dosage unit was high to the number of opioid dependent infants born that year in Allegany or MD.
+
+# 2011 had the highest number between 2006-2012. I can further my research to see the data regarding infant opioid addictions in 2011 and see if there is any correlation.
+
+  ggplot(allegany_pills_per_year) +
+  geom_bar(stat="identity", aes(year, dosage_unit), fill="light blue") +
+  labs(x="Year", y="Total pills", title="Allegany County Pill Shipments 2006-2012", subtitle = "Total pills shipped to Allegany County by year", caption = "Source: DEA ARCOS database, via Washington Post") +
+  scale_x_continuous(breaks = c(2006, 2007, 2008, 2009, 2010, 2011, 2012)) +
+  scale_y_continuous(labels = comma)
+```
+
+```{r}
+# Loading in this table to see what other census variables might be of use for my research.
+
+#v17 <- load_variables(2017, "acs5", cache = TRUE) 
+
+#View(v17)
+
+census_api_key("549950d36c22ff16455fe196bbbd01d63cfbe6cf")
+```
+
+```{r}
+# 15. Looking to see median female age in America, maybe this might be helpful. General practice pulling census data.
+
+median_female_age <- get_acs(geography = "county", variables = c("B01002_003"), survey="acs5", year = 2011)
+
+# Filtering for just Maryland.
+
+md_median_female_age <- median_female_age %>%
+  filter(str_detect(NAME, ", Maryland"))
+
+#Graph of average age of women in each county.
+
+  ggplot(md_median_female_age) +
+  geom_bar(stat="identity", aes(NAME, estimate), fill="light blue") +
+  labs(x="Year", y="Total pills", title="Allegany County Pill Shipments 2006-2012", subtitle = "Total pills shipped to Allegany County by year", caption = "Source: DEA ARCOS database, via Washington Post") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  
+# NOTE: The WONDER data site is able to pull information on mothers age. Maybe I can look into the relationship to see how old the average mother is who is delivering babies with complications?
+```
+
+```{r}
+# 16. Rate of pills per person by county
+county_pills_per_year <- arcos_county_pills_per_year %>%
+  select(countyfips, buyer_county, year, dosage_unit)
+
+county_pills_per_year %>%
+  filter(buyer_county == "ALLEGANY")
+```
+
+```{r}
+# 17.1 How many children under 6 are tehre in Allegany County, MD?
+under_6 %>%
+  filter(NAME == "Allegany County, Maryland")
+
+# There is an estimate of 3,938 children in Allegany County, MD.
+```
+
+```{r}
+
+# 17.2 does this match with what the WONDER CDC data provided for us?
+InfantBirths %>%
+  filter(State.of.Residence == "Maryland") %>%
+  arrange(desc(Births))
+
+# Allegany listed as "Unidentified Counties" that includes 5,451 births from 2016-2018. 
+```
+
+
+
