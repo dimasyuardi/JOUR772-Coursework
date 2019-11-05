@@ -22,51 +22,50 @@ library(tidycensus)
 
 ```{r}
 # store a password as an object called key
-key <- "uO4EK6I"
+#key <- "uO4EK6I"
 ```
 
 ```{r}
 # 1. Data of children under 6 pulled from the census. Could potentially be helpful when narrowing down the definition of a child.
 
-under_6 <- get_acs(geography = "county", variables = c("B05009_002"), survey="acs5")
-
+#under_6 <- get_acs(geography = "county", variables = c("B05009_002"), survey="acs5")
 ```
 
 ```{r}
 # 2. Is the Enhanced State Opioid Overdose Surveillance. This data informs whether or not a state is funded by this program. This program is a "more timely and comprehensive data on fatal and nonfatal opioid overdoses and risk factors associated with fatal overdoses."
 
-esoos <- read.csv(file="data/ESOOS.csv", header=TRUE, sep=",")
+#esoos <- read.csv(file="data/ESOOS.csv", header=TRUE, sep=",")
 ```
 
 ```{r}
 
 # 3. Pulled from the WONDER CDC website, this data provides the top 15 leading causes of death. Pulled this data for reference.
 
-LeadingCauseofDeath <- read.csv(file="data/15 Leading Causes of Deaths - Sheet1.csv", header=TRUE, sep=",")
+#LeadingCauseofDeath <- read.csv(file="data/15 Leading Causes of Deaths - Sheet1.csv", header=TRUE, sep=",")
 ```
 
 ```{r}
 
 # 4. Pulled from the WONDER CDC website, this data provides the infant birth data including any defects and complications from 2016-2018.
 
-InfantBirths <- read.csv(file="data/Infant Births - 2016-2018.csv", header=TRUE, sep=",")
+#InfantBirths <- read.csv(file="data/Infant Births - 2016-2018.csv", header=TRUE, sep=",")
 ```
 
 ```{r}
 
 # 5. Pulled from the WONDER CDC website, this data provides the infant causes of deaths from 2007-2017
 
-InfantDeaths <- read.csv(file="data/Infant Deaths - 2007-2017.csv", header=TRUE, sep=",")
+#InfantDeaths <- read.csv(file="data/Infant Deaths - 2007-2017.csv", header=TRUE, sep=",")
 ```
 
 ```{r}
 # 6. What is the pills per person per month for Utah? White women had the highest fertility rate in Utah in 2017 based on CDC data.
 
-utah_annual_pills <- combined_buyer_annual(state = "UT", key = key)
+#utah_annual_pills <- combined_buyer_annual(state = "UT", key = key)
 
-InfantBirths %>%
-  filter(State.of.Residence == "Utah") %>%
-  arrange(desc(Births))
+#InfantBirths %>%
+  #filter(State.of.Residence == "Utah") %>%
+  #arrange(desc(Births))
 
 #Salt Lake City, Utah had the highest amount of births with 15,998. This is probably also due to the population of this city being the highest. Something to look into.
 ```
@@ -74,10 +73,10 @@ InfantBirths %>%
 ```{r}
 # 7. What is the annual population for Utah? *Would need to seperate female vs. male.
 
-utah_annual_population <- county_population(state = "UT", key = key)
+#utah_annual_population <- county_population(state = "UT", key = key)
 
-utah_annual_population %>%
-  filter(county_name == "Salt Lake")
+#utah_annual_population %>%
+  #filter(county_name == "Salt Lake")
 
 # There has been a steady increase in Salt Lake City's population from 2006 to 2012.
 ```
@@ -85,15 +84,15 @@ utah_annual_population %>%
 ```{r}
 # 8. New York and Kentucky have the highest rate for homeless children. What is the pills per person per month for NY? Kentucky?
 
-ny_annual_pills <- combined_buyer_annual(state = "NY", key = key)
+#ny_annual_pills <- combined_buyer_annual(state = "NY", key = key)
 
-kentucky_annual_pills <- combined_buyer_annual(state = "KY", key = key)
+#kentucky_annual_pills <- combined_buyer_annual(state = "KY", key = key)
 
 # How many births were in NY
 
-InfantBirths %>%
-  filter(State.of.Residence == "New York") %>%
-  arrange(desc(Births))
+#InfantBirths %>%
+  #filter(State.of.Residence == "New York") %>%
+  #arrange(desc(Births))
 
 # Kings County, NY had the highest births with 38,574 from 2007-2017.
 
@@ -102,10 +101,10 @@ InfantBirths %>%
 ```{r}
 # 9. Mississippi has the highest poverty rate. How many pills were shipped into Mississippi?
 
-mississippi_annual_pills <- combined_buyer_annual(state = "MS", key = key)
+#mississippi_annual_pills <- combined_buyer_annual(state = "MS", key = key)
 
-mississippi_annual_pills %>%
-  arrange(desc(DOSAGE_UNIT))
+#mississippi_annual_pills %>%
+  #arrange(desc(DOSAGE_UNIT))
 
 # Lauderdale County is consistently one to have a lot of pills shipped to, with the highest being 1,756,500 pills in 2011. How many births happened in Lauderdale County?
 
@@ -120,16 +119,16 @@ mississippi_annual_pills %>%
 ```{r}
 # 10. Maryland is one of the states with the lowest fertility rate. How many pills did they receive annually?
 
-maryland_annual_pills <- combined_buyer_annual(state = "MD", key = key)
+#maryland_annual_pills <- combined_buyer_annual(state = "MD", key = key)
 
-maryland_annual_pills %>%
-  arrange(desc(DOSAGE_UNIT))
+#maryland_annual_pills %>%
+  #arrange(desc(DOSAGE_UNIT))
 
 # Baltimore City County received the most number of pills in 2006 with 6,133,600 dosage units. Let's look into the infant birth rate.
 
-InfantBirths %>%
-  filter(State.of.Residence == "Maryland") %>%
-  arrange(desc(Births))
+#InfantBirths %>%
+  #filter(State.of.Residence == "Maryland") %>%
+  #arrange(desc(Births))
 
 # 7,681 births recorded in Baltimore City County from 2007 - 2017. How many deaths?
 
@@ -143,9 +142,9 @@ InfantBirths %>%
 
 ```{r}
 # 11. Which county had the highest amount of pills delivered?
-highest_pills <- summarized_county_annual(key = key) %>%
-  arrange(desc(DOSAGE_UNIT)) %>%
-  janitor::clean_names(case = "snake")
+#highest_pills <- summarized_county_annual(key = key) %>%
+  #arrange(desc(DOSAGE_UNIT)) %>%
+  #janitor::clean_names(case = "snake")
 
 # Will need to figure out this number based on the population of the city as well.
 ```
@@ -166,12 +165,12 @@ highest_pills <- summarized_county_annual(key = key) %>%
 ```{r}
 # 13. Allegany County, Maryland had one of the highest pills per person average. Look into the data further.
 
-arcos_county_pills_per_year <- summarized_county_annual(key = key) %>%
-  clean_names()
+#arcos_county_pills_per_year <- summarized_county_annual(key = key) %>%
+  #clean_names()
 
-allegany_pills_per_year <- arcos_county_pills_per_year %>%
-  filter(buyer_state == "MD", buyer_county == "ALLEGANY") %>%
-  select(year, dosage_unit)
+#allegany_pills_per_year <- arcos_county_pills_per_year %>%
+  #filter(buyer_state == "MD", buyer_county == "ALLEGANY") %>%
+  #select(year, dosage_unit)
 ```
 
 ```{r}
@@ -179,11 +178,11 @@ allegany_pills_per_year <- arcos_county_pills_per_year %>%
 
 # 2011 had the highest number between 2006-2012. I can further my research to see the data regarding infant opioid addictions in 2011 and see if there is any correlation.
 
-  ggplot(allegany_pills_per_year) +
-  geom_bar(stat="identity", aes(year, dosage_unit), fill="light blue") +
-  labs(x="Year", y="Total pills", title="Allegany County Pill Shipments 2006-2012", subtitle = "Total pills shipped to Allegany County by year", caption = "Source: DEA ARCOS database, via Washington Post") +
-  scale_x_continuous(breaks = c(2006, 2007, 2008, 2009, 2010, 2011, 2012)) +
-  scale_y_continuous(labels = comma)
+  #ggplot(allegany_pills_per_year) +
+  #geom_bar(stat="identity", aes(year, dosage_unit), fill="light blue") +
+  #labs(x="Year", y="Total pills", title="Allegany County Pill Shipments 2006-2012", subtitle = "Total pills shipped to Allegany County by year", caption = "Source: DEA ARCOS database, via Washington Post") +
+  #scale_x_continuous(breaks = c(2006, 2007, 2008, 2009, 2010, 2011, 2012)) +
+  #scale_y_continuous(labels = comma)
 ```
 
 ```{r}
@@ -192,43 +191,41 @@ allegany_pills_per_year <- arcos_county_pills_per_year %>%
 #v17 <- load_variables(2017, "acs5", cache = TRUE) 
 
 #View(v17)
-
-census_api_key("549950d36c22ff16455fe196bbbd01d63cfbe6cf")
 ```
 
 ```{r}
 # 15. Looking to see median female age in America, maybe this might be helpful. General practice pulling census data.
 
-median_female_age <- get_acs(geography = "county", variables = c("B01002_003"), survey="acs5", year = 2011)
+#median_female_age <- get_acs(geography = "county", variables = c("B01002_003"), survey="acs5", year = 2011)
 
 # Filtering for just Maryland.
 
-md_median_female_age <- median_female_age %>%
-  filter(str_detect(NAME, ", Maryland"))
+#md_median_female_age <- median_female_age %>%
+  #filter(str_detect(NAME, ", Maryland"))
 
 #Graph of average age of women in each county.
 
-  ggplot(md_median_female_age) +
-  geom_bar(stat="identity", aes(NAME, estimate), fill="light blue") +
-  labs(x="Year", y="Total pills", title="Allegany County Pill Shipments 2006-2012", subtitle = "Total pills shipped to Allegany County by year", caption = "Source: DEA ARCOS database, via Washington Post") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  #ggplot(md_median_female_age) +
+  #geom_bar(stat="identity", aes(NAME, estimate), fill="light blue") +
+  #labs(x="Year", y="Total pills", title="Allegany County Pill Shipments 2006-2012", subtitle = "Total pills shipped to Allegany County by year", caption = "Source: DEA ARCOS database, via Washington Post") + 
+  #theme(axis.text.x = element_text(angle = 90, hjust = 1))
   
 # NOTE: The WONDER data site is able to pull information on mothers age. Maybe I can look into the relationship to see how old the average mother is who is delivering babies with complications?
 ```
 
 ```{r}
 # 16. Rate of pills per person by county
-county_pills_per_year <- arcos_county_pills_per_year %>%
-  select(countyfips, buyer_county, year, dosage_unit)
+#ounty_pills_per_year <- arcos_county_pills_per_year %>%
+  #select(countyfips, buyer_county, year, dosage_unit)
 
-county_pills_per_year %>%
-  filter(buyer_county == "ALLEGANY")
+#county_pills_per_year %>%
+  #filter(buyer_county == "ALLEGANY")
 ```
 
 ```{r}
 # 17.1 How many children under 6 are tehre in Allegany County, MD?
-under_6 %>%
-  filter(NAME == "Allegany County, Maryland")
+#under_6 %>%
+  #filter(NAME == "Allegany County, Maryland")
 
 # There is an estimate of 3,938 children in Allegany County, MD.
 ```
@@ -236,12 +233,184 @@ under_6 %>%
 ```{r}
 
 # 17.2 does this match with what the WONDER CDC data provided for us?
-InfantBirths %>%
-  filter(State.of.Residence == "Maryland") %>%
-  arrange(desc(Births))
+#InfantBirths %>%
+  #filter(State.of.Residence == "Maryland") %>%
+  #arrange(desc(Births))
 
 # Allegany listed as "Unidentified Counties" that includes 5,451 births from 2016-2018. 
 ```
 
+## UPDATED FROM NOV. 5 IN-CLASS WORK
 
+```{r}
+# 1. Data to find state with the highest average pills per person.
 
+state_population_per_year <- read_csv(file="data/state_population_per_year.csv")
+
+#highest_pills %>%
+  #group_by(buyer_state) %>%
+  #summarise(total_pills=sum(dosage_unit)) %>%
+  #full_join(state_population_per_year, by="buyer_state") %>%
+  #mutate(average_pills_person = round((total_pills/population_average),2)) %>%
+  #arrange(desc(average_pills_person))
+
+# The top 3 states we WV, KY and SC.
+```
+
+```{r}
+# Let's pull in new useful data that will further explain the infant opioid addiction and the perscriptions women have been prescribed.
+
+neonatal_abstinence_syndrome <- read_csv(file="data/Neonatal_Abstinence_Syndrome.csv")
+
+privately_insured_women <- read_csv(file="data/Privately_Insured_Women.csv")
+
+medicaid_enrolled_women <- read_csv(file="data/Medicaid_Enrolled_Women.csv")
+```
+
+```{r}
+
+# 2. Which states have the highest annual change of neonatal abstinence syndrome reported per 1,000 births.
+
+colnames(neonatal_abstinence_syndrome)[colnames(neonatal_abstinence_syndrome)=="X1"] <- "state"
+
+colnames(neonatal_abstinence_syndrome)[colnames(neonatal_abstinence_syndrome)=="Annual Change"] <- "annual_change"
+
+neonatal_abstinence_syndrome %>%
+  arrange(desc(annual_change))
+
+# Vermont, Maine and West Virginia have the highest rate of annual change in the increase of neonatal abstinence syndrome.
+
+# We know that WV has the highest average pills per person with 464.89
+# Maine has an average of 299.96 pills per person
+# Vermont has an average of 197.89 pills per person
+
+```
+
+```{r}
+# Let's pull in the WONDER data for infant deaths and births to get a more general overview on these states
+
+infant_births <- read.csv(file="data/Infant Births - 2016-2018.csv", header=TRUE, sep=",")
+
+infant_deaths <- read.csv(file="data/Infant Deaths - 2007-2017.csv", header=TRUE, sep=",")
+```
+
+```{r}
+# 3.1 Find the infant births and deaths for Vermont
+
+infant_births %>%
+  filter(State.of.Residence == "Vermont") %>%
+  arrange(desc(Births))
+
+# We can find the statistic for total number of births in Vermont and the percentage of how many of these births have NAS.
+```
+
+```{r}
+# 3.2 Find the infant births and deaths for Vermont
+infant_deaths %>%
+  filter(State == "Vermont") %>%
+  arrange(desc(Deaths))
+
+# This data set does not have any information on infant deaths in Vermont.
+```
+
+```{r}
+# 4.1 Find the infant births and deaths for West Virginia
+
+infant_births %>%
+  filter(State.of.Residence == "West Virginia") %>%
+  arrange(desc(Births))
+```
+
+```{r}
+# 4.2 Find the infant births and deaths for Vermont
+
+infant_deaths %>%
+  filter(State == "West Virginia") %>%
+  arrange(desc(Deaths))
+
+# 14 deaths were linked to maternal issues in West Virginia.
+```
+
+```{r}
+# 5.1 Find the infant births and deaths for Maine
+
+infant_births %>%
+  filter(State.of.Residence == "Maine") %>%
+  arrange(desc(Births))
+
+```
+
+```{r}
+# 5.2 Find the infant births and deaths for Maine
+
+infant_deaths %>%
+  filter(State == "Maine") %>%
+  arrange(desc(Deaths))
+
+# # 12 deaths were linked to maternal issues in Maine.
+```
+
+```{r}
+# I found data that describes the rate of change/growth of Opioid Use Disorder at the time of delivery
+
+opioid_use_disorder <- read.csv(file="data/Opioid_Use_Disorder.csv", header=TRUE, sep=",")
+```
+
+```{r}
+# 6. Pull the data for Vermont, West Virginia and Maine to see if the correlation is still similar to the NAS data.
+
+opioid_use_disorder %>%
+  arrange(desc(annual_change))
+
+# Yes, the data is still similar with Vermont at 5.37, Maine 4.13 and West Virginia at 2.83 annual rate change.
+
+# It seems like there should be more investigating for Vermont because they have a high number of infants with some sort of disorder related to opioids. 
+
+# Even though their average pills per person is smaller, that is probably due to it being a smaller state to WV and Maine.
+
+```
+
+```{r}
+# 7. Vermont is a state we want to look into How many pills did they receive annually?
+
+#vermont_annual_pills <- combined_buyer_annual(state = "VT", key = key)
+
+#vermont_annual_pills %>%
+  #arrange(desc(DOSAGE_UNIT))
+
+# Chittenden County, VT had 3,230,900 dosage units in 2009. Chittenden County holds the top 3 orders of opioids. Let's look into Chittenden County, VT further.
+```
+
+```{r}
+# 8. Chittenden County, Vermont ordered the most opioids. Look into the data further.
+
+#arcos_county_pills_per_year <- summarized_county_annual(key = key) %>%
+  #clean_names()
+
+#chittenden_pills_per_year <- arcos_county_pills_per_year %>%
+  #filter(buyer_state == "VT", buyer_county == "CHITTENDEN") %>%
+  #select(year, dosage_unit)
+```
+
+```{r}
+# 9. Rate of pills per person by county, specifcally Chittenden County, VT.
+
+#county_pills_per_year <- arcos_county_pills_per_year %>%
+  #select(countyfips, buyer_county, year, dosage_unit, buyer_state)
+
+# Join the arcos_county_pills_per_year by state_population_average to find that number
+```
+
+```{r}
+#census_api_key("549950d36c22ff16455fe196bbbd01d63cfbe6cf")
+
+# Example: vt <- get_acs(geography = "county", 
+              #variables = c(medincome = "B19013_001"), 
+              #state = "VT")
+```
+
+```{r}
+# v17 <- load_variables(2017, "acs5", cache = TRUE)
+
+# View(v17)
+```
