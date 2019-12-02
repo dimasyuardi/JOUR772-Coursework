@@ -414,3 +414,74 @@ opioid_use_disorder %>%
 
 # View(v17)
 ```
+
+## CONTINUED NOV. 19 IN-CLASS WORK
+
+```{r}
+# 10. Let's pull ARCOS data for Vermont:
+
+vermont_arcos <- read_tsv("data/arcos-vt-statewide-itemized.tsv")
+```
+
+```{r}
+
+#11. Find how many pills were sent to Vermont
+
+vermont_arcos %>%
+group_by(BUYER_NAME, BUYER_COUNTY, BUYER_ADDRESS1) %>%
+summarise(shipments = n(),
+total_pills = sum(DOSAGE_UNIT)) %>%
+arrange(desc(total_pills))
+
+# Chittenden and Franklin are the counties that had the most total pills sent to them. HealthDirect Institutional Pharmacy Services Inc. and University of Vermont Medical Center ordered the most opioids
+
+# KPH Healthcare Services Inc in Franklin ordered the most pills
+
+```
+
+
+```{r}
+
+#12. Find how many pills were sent to Chittenden County
+
+vermont_arcos %>%
+filter(BUYER_COUNTY == "CHITTENDEN") %>%
+group_by(BUYER_NAME, BUYER_COUNTY, BUYER_ADDRESS1) %>%
+summarise(shipments = n(),
+total_pills = sum(DOSAGE_UNIT)) %>%
+arrange(desc(total_pills))
+```
+
+
+```{r}
+# 13. Where were these pills coming from? What state was sending the most?
+
+vermont_arcos %>%
+filter(BUYER_COUNTY == "CHITTENDEN") %>%
+group_by(REPORTER_NAME, REPORTER_STATE, BUYER_NAME, BUYER_STATE, BUYER_COUNTY) %>%
+summarise(shipments = n(),
+total_pills = sum(DOSAGE_UNIT)) %>%
+arrange(desc(total_pills))
+
+# Cardinal Health from MA delivered the most opioids to Chittenden County, VT.
+
+```
+
+```{r}
+# Is there any more information we can find on the University of Vermont Medical Center and their opioid prescription trends?
+
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+
