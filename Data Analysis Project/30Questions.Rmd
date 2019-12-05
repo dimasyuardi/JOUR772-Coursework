@@ -23,6 +23,13 @@ install.packages('maps')
 library(maps)
 install.packages('corrr')
 library(corrr)
+# Add key to .Renviron
+Sys.setenv(CENSUS_KEY=797ae2d903eb9bee9daa41bb71c0696897cbcba7)
+# Reload .Renviron
+readRenviron("~/.Renviron")
+# Check to see that the expected key is output in your R console
+Sys.getenv("CENSUS_KEY")
+library(censusapi)
 ```
 
 ```{r}
@@ -190,15 +197,17 @@ county_pills_per_year <- arcos_county_pills_per_year %>%
 ```
 
 ```{r}
-#census_api_key("549950d36c22ff16455fe196bbbd01d63cfbe6cf")
+census_api_key("549950d36c22ff16455fe196bbbd01d63cfbe6cf")
 
-# Example: vt <- get_acs(geography = "county", 
-              #variables = c(medincome = "B19013_001"), 
-              #state = "VT")
+# Example: 
+
+vt <- get_acs(geography = "county", 
+              variables = c(medincome = "B19013_001"), 
+              state = "VT")
 ```
 
 ```{r}
-# v17 <- load_variables(2017, "acs5", cache = TRUE)
+v17 <- load_variables(2017, "acs5", cache = TRUE)
 
 # View(v17)
 ```
@@ -387,18 +396,106 @@ ggplot(nas_ppp) +
 ```
 
 ```{r}
-# 29.
+# 29. In order to figure out more specific data, let's pull the county pills per year for every county between 2006-2012. This will help us moving forward when figuring out opioid dosage amounts for Maine.
+
+county_pills_per_year <- arcos_county_pills_per_year %>%
+  select(countyfips, buyer_county, buyer_state, year, dosage_unit)
+
+county_pills_per_year %>%
+  filter(buyer_state == "ME") %>%
+  arrange(desc(dosage_unit))
 ```
 
 ```{r}
-# 30. 
+# 30. More specifically let's pull just Maine since we want to dive in there a little more.
+
+maine_pills_per_year <- arcos_county_pills_per_year %>%
+  filter(buyer_state == "ME")
 ```
 
 ```{r}
 # 31.
+#maine_female_unemployment <- get_acs(geography = "county", 
+              #variables = c(funemploy = "B23001_094"), 
+              #state = "ME")
 ```
 
 ```{r}
 # 32.
+#maine_median_income <- get_acs(geography = "state", 
+              #variables = c(medincome = "B19013_001"), 
+              #state = "ME")
 ```
+
+```{r}
+state_median <- get_acs(geography = "state", variables = c("B19013_001"), year = 2012) %>%
+  rename("state" = "NAME")
+```
+
+```{r}
+state_unemployed <- get_acs(geography = "state", variables = c("B23001_094"), year = 2012) %>%
+  rename("state" = "NAME")
+```
+
+```{r}
+state_unemployment <- state_unemployed %>%
+  inner_join(nas_roc, by="state")
+
+state_unemployment %>%
+  select(-GEOID, -state, -variable, -moe, -BUYER_STATE) %>%
+  correlate()
+
+ggplot(state_unemployment) +
+  geom_point(aes(estimate, nas_2012)) +
+  labs(x="unemployed", y="nas", title="NA", caption = "Source: DEA ARCOS database, via Washington Post", fill="buyer_county") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(labels = comma) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_smooth(aes(estimate, nas_2012), method = "lm", se = FALSE) +
+  geom_text(aes(estimate, nas_2012, label=BUYER_STATE))
+```
+
+```{r}
+```
+
+```{r}
+maine_unemployment <- maine_median_income %>%
+  inner_join(maine_female_unemployment, by="GEOID") %>%
+  select(GEOID, NAME.x, estimate.x, estimate.y) %>%
+  rename("medianincome" = "estimate.x") %>%
+  rename("unemployed" = "estimate.y")
+
+# 27. Correlate the data set by selecting all the rows minus BUYER_STATE and state. We are correlating the data with NAS 2012.
+maine_unemployment %>%
+  select(-GEOID, -NAME.x) %>%
+  correlate() 
+
+#28. Plot the data so that we can see a better view of which state has the most interesting correlation between NAS and PPP.
+ggplot(maine_unemployment) +
+  geom_point(aes(medianincome, unemployed)) +
+  labs(x="nas", y="ppp", title="NA", caption = "Source: DEA ARCOS database, via Washington Post", fill="buyer_county") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(labels = comma) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_smooth(aes(medianincome, unemployed), method = "lm", se = FALSE)
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+
+
+
 
