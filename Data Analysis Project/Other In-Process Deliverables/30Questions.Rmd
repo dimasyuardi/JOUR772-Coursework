@@ -1,0 +1,563 @@
+---
+title: "FinalAnalysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# If you don't have one or both of these these, use install.packages()
+
+# install.packages('arcos')
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(arcos)
+library(scales)
+library(ggrepel)
+library(tidycensus)
+library(tigris)
+install.packages('maps')
+library(maps)
+install.packages('corrr')
+library(corrr)
+# Add key to .Renviron
+Sys.setenv(CENSUS_KEY=797ae2d903eb9bee9daa41bb71c0696897cbcba7)
+# Reload .Renviron
+readRenviron("~/.Renviron")
+# Check to see that the expected key is output in your R console
+Sys.getenv("CENSUS_KEY")
+library(censusapi)
+```
+
+```{r}
+# store a password as an object called key
+key <- "uO4EK6I"
+```
+
+```{r}
+# 1. Data to find state with the highest average pills per person.
+
+state_population_per_year <- read_csv(file="data/state_population_per_year.csv")
+
+highest_pills %>%
+  group_by(buyer_state) %>%
+  summarise(total_pills=sum(dosage_unit)) %>%
+  full_join(state_population_per_year, by="buyer_state") %>%
+  mutate(average_pills_person = round((total_pills/population_average),2)) %>%
+  arrange(desc(average_pills_person))
+
+# The top 3 states we WV, KY and SC.
+```
+
+```{r}
+# Let's pull in new useful data that will further explain the infant opioid addiction and the perscriptions women have been prescribed.
+
+neonatal_abstinence_syndrome <- read_csv(file="data/Neonatal_Abstinence_Syndrome.csv")
+
+privately_insured_women <- read_csv(file="data/Privately_Insured_Women.csv")
+
+medicaid_enrolled_women <- read_csv(file="data/Medicaid_Enrolled_Women.csv")
+```
+
+```{r}
+
+# 2. Which states have the highest annual change of neonatal abstinence syndrome reported per 1,000 births.
+
+colnames(neonatal_abstinence_syndrome)[colnames(neonatal_abstinence_syndrome)=="X1"] <- "state"
+
+colnames(neonatal_abstinence_syndrome)[colnames(neonatal_abstinence_syndrome)=="Annual Change"] <- "annual_change"
+
+neonatal_abstinence_syndrome %>%
+  arrange(desc(annual_change))
+
+# Vermont, Maine and West Virginia have the highest rate of annual change in the increase of neonatal abstinence syndrome.
+
+# We know that WV has the highest average pills per person with 464.89
+# Maine has an average of 299.96 pills per person
+# Vermont has an average of 197.89 pills per person
+
+```
+
+```{r}
+# Let's pull in the WONDER data for infant deaths and births to get a more general overview on these states
+
+infant_births <- read.csv(file="data/Infant Births - 2016-2018.csv", header=TRUE, sep=",")
+
+infant_deaths <- read.csv(file="data/Infant Deaths - 2007-2017.csv", header=TRUE, sep=",")
+```
+
+```{r}
+# 3.1 Find the infant births and deaths for Vermont
+
+infant_births %>%
+  filter(State.of.Residence == "Vermont") %>%
+  arrange(desc(Births))
+
+# We can find the statistic for total number of births in Vermont and the percentage of how many of these births have NAS.
+```
+
+```{r}
+# 3.2 Find the infant births and deaths for Vermont
+infant_deaths %>%
+  filter(State == "Vermont") %>%
+  arrange(desc(Deaths))
+
+# This data set does not have any information on infant deaths in Vermont.
+```
+
+```{r}
+# 4.1 Find the infant births and deaths for West Virginia
+
+infant_births %>%
+  filter(State.of.Residence == "West Virginia") %>%
+  arrange(desc(Births))
+```
+
+```{r}
+# 4.2 Find the infant births and deaths for Vermont
+
+infant_deaths %>%
+  filter(State == "West Virginia") %>%
+  arrange(desc(Deaths))
+
+# 14 deaths were linked to maternal issues in West Virginia.
+```
+
+```{r}
+# 5.1 Find the infant births and deaths for Maine
+
+infant_births %>%
+  filter(State.of.Residence == "Maine") %>%
+  arrange(desc(Births))
+
+```
+
+```{r}
+# 5.2 Find the infant births and deaths for Maine
+
+infant_deaths %>%
+  filter(State == "Maine") %>%
+  arrange(desc(Deaths))
+
+# # 12 deaths were linked to maternal issues in Maine.
+```
+
+```{r}
+# I found data that describes the rate of change/growth of Opioid Use Disorder at the time of delivery
+
+opioid_use_disorder <- read.csv(file="data/Opioid_Use_Disorder.csv", header=TRUE, sep=",")
+```
+
+```{r}
+# 6. Pull the data for Vermont, West Virginia and Maine to see if the correlation is still similar to the NAS data.
+
+opioid_use_disorder %>%
+  arrange(desc(annual_change))
+
+# Yes, the data is still similar with Vermont at 5.37, Maine 4.13 and West Virginia at 2.83 annual rate change.
+
+# It seems like there should be more investigating for Vermont because they have a high number of infants with some sort of disorder related to opioids. 
+
+# Even though their average pills per person is smaller, that is probably due to it being a smaller state to WV and Maine.
+
+```
+
+```{r}
+# 7. Vermont is a state we want to look into How many pills did they receive annually?
+
+vermont_annual_pills <- combined_buyer_annual(state = "VT", key = key)
+
+vermont_annual_pills %>%
+  arrange(desc(DOSAGE_UNIT))
+
+# Chittenden County, VT had 3,230,900 dosage units in 2009. Chittenden County holds the top 3 orders of opioids. Let's look into Chittenden County, VT further.
+```
+
+```{r}
+# 8. Chittenden County, Vermont ordered the most opioids. Look into the data further.
+
+arcos_county_pills_per_year <- summarized_county_annual(key = key) %>%
+  clean_names()
+
+chittenden_pills_per_year <- arcos_county_pills_per_year %>%
+  filter(buyer_state == "VT", buyer_county == "CHITTENDEN") %>%
+  select(year, dosage_unit)
+```
+
+```{r}
+# 9. Rate of pills per person by county, specifcally Chittenden County, VT.
+
+county_pills_per_year <- arcos_county_pills_per_year %>%
+  select(countyfips, buyer_county, year, dosage_unit, buyer_state)
+
+# Join the arcos_county_pills_per_year by state_population_average to find that number
+```
+
+```{r}
+census_api_key("549950d36c22ff16455fe196bbbd01d63cfbe6cf")
+
+# Example: 
+
+vt <- get_acs(geography = "county", 
+              variables = c(medincome = "B19013_001"), 
+              state = "VT")
+```
+
+```{r}
+v17 <- load_variables(2017, "acs5", cache = TRUE)
+
+# View(v17)
+```
+
+## CONTINUED NOV. 19 IN-CLASS WORK
+
+```{r}
+# 10. Let's pull ARCOS data for Vermont:
+
+vermont_arcos <- read_tsv("data/arcos-vt-statewide-itemized.tsv")
+```
+
+```{r}
+
+#11. Find how many pills were sent to Vermont
+
+vermont_arcos %>%
+group_by(BUYER_NAME, BUYER_COUNTY, BUYER_ADDRESS1) %>%
+summarise(shipments = n(),
+total_pills = sum(DOSAGE_UNIT)) %>%
+arrange(desc(total_pills))
+
+# Chittenden and Franklin are the counties that had the most total pills sent to them. HealthDirect Institutional Pharmacy Services Inc. and University of Vermont Medical Center ordered the most opioids
+
+# KPH Healthcare Services Inc in Franklin ordered the most pills
+
+```
+
+
+```{r}
+
+#12. Find how many pills were sent to Chittenden County
+
+vermont_arcos %>%
+filter(BUYER_COUNTY == "CHITTENDEN") %>%
+group_by(BUYER_NAME, BUYER_COUNTY, BUYER_ADDRESS1) %>%
+summarise(shipments = n(),
+total_pills = sum(DOSAGE_UNIT)) %>%
+arrange(desc(total_pills))
+```
+
+
+```{r}
+# 13. Where were these pills coming from? What state was sending the most?
+
+vermont_arcos %>%
+filter(BUYER_COUNTY == "CHITTENDEN") %>%
+group_by(REPORTER_NAME, REPORTER_STATE, BUYER_NAME, BUYER_STATE, BUYER_COUNTY) %>%
+summarise(shipments = n(),
+total_pills = sum(DOSAGE_UNIT)) %>%
+arrange(desc(total_pills))
+
+# Cardinal Health from MA delivered the most opioids to Chittenden County, VT.
+
+```
+
+```{r}
+# 14. Is there any more information we can find on the University of Vermont Medical Center and their opioid prescription trends?
+
+```
+
+```{r}
+# 15. In order to figure out more specific data, let's pull the county pills per year for every county between 2006-2012. This will help us moving forward when figuring out opioid dosage amounts for Vermont.
+
+county_pills_per_year <- arcos_county_pills_per_year %>%
+  select(countyfips, buyer_county, buyer_state, year, dosage_unit)
+
+county_pills_per_year %>%
+  filter(buyer_state == "VT")
+
+```
+
+```{r}
+#16. Find the county that has the highest dosage unit. This data set can help inform for other potential counties and states that might have potential in correlating the NAS data set.
+
+highest_pills <- summarized_county_annual(key = key) %>%
+  arrange(desc(DOSAGE_UNIT)) %>%
+  janitor::clean_names(case = "snake")
+```
+
+```{r}
+# 17.This code is pulling the highest average pills per person by state. This will be useful information for general analysis.
+
+ highest_pills %>%
+  group_by(buyer_state) %>%
+  summarise(total_pills=sum(dosage_unit)) %>%
+  full_join(state_population_per_year, by="buyer_state") %>%
+  mutate(average_pills_person = round((total_pills/population_average),2)) %>%
+  arrange(desc(average_pills_person))
+```
+
+```{r}
+# 18. This dataset is amount of pills delivered to the counties by year.
+
+arcos_county_pills_per_year <- summarized_county_annual(key = key) %>%
+  clean_names()
+  
+```
+
+```{r}
+
+# 19. More specifically let's pull just Vermont since we want to dive in there a little more.
+
+vermont_pills_per_year <- arcos_county_pills_per_year %>%
+  filter(buyer_state == "VT")
+```
+
+```{r}
+
+#20. This first part is pulling the NAS data and cleaning it up a bit so that we are able to use it for joins down the road for further analysis. Right now this data is displaying the rate of change by year and the increase or decrease of the number of infants diagnosed with NAS per 1,000 births.
+
+nas_roc <- neonatal_abstinence_syndrome %>%
+  select(state,`2006`:`2012`) %>%
+  rename_at(vars(-state),funs(paste0('nas_',.))) %>%
+  mutate_at(vars(-state), funs(as.character(.))) %>%
+  #mutate_at(vars(-state), funs(. = case_when(. == "null" ~ NA_character_,
+  #                            TRUE ~ as.character(.))))
+  mutate(nas_2006 = case_when(nas_2006 == "null" ~ NA_character_,
+                              TRUE ~ nas_2006)) %>%
+  mutate(nas_2007 = case_when(nas_2007 == "null" ~ NA_character_,
+                              TRUE ~ nas_2007)) %>%
+  mutate(nas_2008 = case_when(nas_2008 == "null" ~ NA_character_,
+                              TRUE ~ nas_2008)) %>%
+  mutate(nas_2009 = case_when(nas_2009 == "null" ~ NA_character_,
+                              TRUE ~ nas_2009)) %>%
+  mutate(nas_2010 = case_when(nas_2010 == "null" ~ NA_character_,
+                              TRUE ~ nas_2010)) %>%
+  mutate(nas_2011 = case_when(nas_2011 == "null" ~ NA_character_,
+                              TRUE ~ nas_2011)) %>%
+  mutate(nas_2012 = case_when(nas_2012 == "null" ~ NA_character_,
+                              TRUE ~ nas_2012)) %>%
+  mutate_at(vars(-state), funs(as.numeric(.)))
+
+
+# 21. Pull list of state name and abbreviations. Load Tigris package for this to work. This is to help us with the join of the NAS data as we need similar columns.
+state_fips <- fips_codes %>%
+  group_by(state, state_name) %>%
+  summarise(count=n()) %>%
+  select(state, state_name)
+
+# 22. Join it to nas_roc
+nas_roc <- nas_roc %>%
+  left_join(state_fips, by=c("state" = "state_name")) %>%
+  select(BUYER_STATE = state.y, everything())
+
+# 23. Get totals by state by year. This will help us find the average pills per person for correlating it to NAS data.
+summarize_state_annual <- summarized_county_annual(key = key) %>%
+  group_by(BUYER_STATE, year)%>%
+  summarise(total_pills=sum(DOSAGE_UNIT))
+
+# 24. Get state population
+state_population_annual <- state_population(key = key)
+
+# 25. Calculate pills per person per year. This will give us a clean data table of all the average PPP's per year. This will allow for an easier join between the nas_roc data set.
+state_pills_per_person_annual <- summarize_state_annual %>%
+  inner_join(state_population_annual) %>%
+  mutate(pills_per_person = round((total_pills/population),2))%>%
+  select(-total_pills,-population) %>%
+  pivot_wider(names_from = "year", values_from = "pills_per_person") %>%
+  rename_at(vars(-BUYER_STATE),funs(paste0('ppp_',.)))
+
+# 26.Joining the two data sets (PPP and NAS) to have it one place
+nas_ppp <- nas_roc %>%
+  inner_join(state_pills_per_person_annual)
+
+glimpse(nas_ppp)
+
+# 27. Correlate the data set by selecting all the rows minus BUYER_STATE and state. We are correlating the data with NAS 2012.
+nas_ppp %>%
+  select(-BUYER_STATE, -state) %>%
+  correlate() %>%
+  filter(str_detect(rowname, "ppp")) %>%
+  select(rowname:nas_2012)
+
+#28. Plot the data so that we can see a better view of which state has the most interesting correlation between NAS and PPP.
+ggplot(nas_ppp) +
+  geom_point(aes(nas_2012, ppp_2006)) +
+  labs(x="nas", y="ppp", title="NA", caption = "Source: DEA ARCOS database, via Washington Post", fill="buyer_county") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(labels = comma) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_smooth(aes(nas_2012, ppp_2006), method = "lm", se = FALSE) +
+  geom_text(aes(nas_2012, ppp_2006, label=BUYER_STATE))
+
+# It seems like Vermont has a pretty low correlation as the PPP rose, NAS wasn't rising as fast. Maine on the otherhand was right on track with the correlation. We could possibly look into that state as well as other factors like income and employment rates of women to see if these are valuable aspects worth further investigation.
+```
+
+```{r}
+# 29. In order to figure out more specific data, let's pull the county pills per year for every county between 2006-2012. This will help us moving forward when figuring out opioid dosage amounts for Maine.
+
+county_pills_per_year <- arcos_county_pills_per_year %>%
+  select(countyfips, buyer_county, buyer_state, year, dosage_unit)
+
+county_pills_per_year %>%
+  filter(buyer_state == "ME") %>%
+  arrange(desc(dosage_unit))
+```
+
+```{r}
+# 30. More specifically let's pull just Maine since we want to dive in there a little more.
+
+maine_pills_per_year <- arcos_county_pills_per_year %>%
+  filter(buyer_state == "ME")
+```
+
+```{r}
+# 31.
+#maine_female_unemployment <- get_acs(geography = "county", 
+              #variables = c(funemploy = "B23001_094"), 
+              #state = "ME")
+```
+
+```{r}
+# 32.
+#maine_median_income <- get_acs(geography = "state", 
+              #variables = c(medincome = "B19013_001"), 
+              #state = "ME")
+```
+
+```{r}
+state_median <- get_acs(geography = "state", variables = c("B19013_001"), year = 2012) %>%
+  rename("state" = "NAME")
+```
+
+```{r}
+state_unemployed <- get_acs(geography = "state", variables = c("B23001_094"), year = 2012) %>%
+  rename("state" = "NAME")
+```
+
+```{r}
+state_unemployment <- state_unemployed %>%
+  inner_join(nas_roc, by="state")
+
+state_unemployment %>%
+  select(-GEOID, -state, -variable, -moe, -BUYER_STATE) %>%
+  correlate()
+
+ggplot(state_unemployment) +
+  geom_point(aes(estimate, nas_2012)) +
+  labs(x="unemployed", y="nas", title="NA", caption = "Source: DEA ARCOS database, via Washington Post", fill="buyer_county") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(labels = comma) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_smooth(aes(estimate, nas_2012), method = "lm", se = FALSE) +
+  geom_text(aes(estimate, nas_2012, label=BUYER_STATE))
+```
+
+```{r}
+```
+
+```{r}
+maine_unemployment <- maine_median_income %>%
+  inner_join(maine_female_unemployment, by="GEOID") %>%
+  select(GEOID, NAME.x, estimate.x, estimate.y) %>%
+  rename("medianincome" = "estimate.x") %>%
+  rename("unemployed" = "estimate.y")
+
+# 27. Correlate the data set by selecting all the rows minus BUYER_STATE and state. We are correlating the data with NAS 2012.
+maine_unemployment %>%
+  select(-GEOID, -NAME.x) %>%
+  correlate() 
+
+#28. Plot the data so that we can see a better view of which state has the most interesting correlation between NAS and PPP.
+ggplot(maine_unemployment) +
+  geom_point(aes(medianincome, unemployed)) +
+  labs(x="nas", y="ppp", title="NA", caption = "Source: DEA ARCOS database, via Washington Post", fill="buyer_county") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(labels = comma) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_smooth(aes(medianincome, unemployed), method = "lm", se = FALSE)
+```
+
+
+```{r}
+# Let's look into Maine and see the dosage unit by county to get a better idea of how much opioid usage there was in that state.
+
+arcos_county_pills_per_year <- summarized_county_annual(key = key) %>%
+  clean_names()
+
+# Here are pulling data regarding total unemployment rate for the state of Maine from 2008 - 2018.
+
+maine_unemployment_rate <- read_csv(file="data/maineunemployed.csv") %>% 
+  mutate_at(vars(GEOID), as.numeric) %>%
+  rename("buyer_county" = "COUNTY NAME") %>%
+  rename_at(vars(-GEOID, -buyer_county),funs(paste0('unempl_rate_',.)))
+  
+```
+
+```{r}
+
+# Here we are pulling the data of dosage unit by year from 2006 - 2012 from the ARCOS database.
+
+maine_county_pills_per_year <- arcos_county_pills_per_year %>%
+  select(countyfips, buyer_county, buyer_state, year, dosage_unit) %>%
+  filter(buyer_state == "ME") %>%
+  arrange(desc(dosage_unit)) %>%
+  rename("GEOID" = "countyfips") %>% 
+  mutate_at(vars(GEOID), as.numeric)%>%
+  select(-buyer_state) %>%
+  pivot_wider(names_from = "year", values_from = "dosage_unit") %>%
+  rename_at(vars(-GEOID, -buyer_county),funs(paste0('ttl_pills_',.)))
+
+maine_county_pills_per_year <- maine_county_pills_per_year[ ,c(1,2,9,8,7,6,4,3,5)]
+```
+
+```{r}
+# Let's join the unemployment rate and dosage units together to see if there is any correlation.
+
+unemploy_ppy <- maine_county_pills_per_year %>%
+  inner_join(maine_unemployment_rate, by = "GEOID") %>% 
+  mutate_at(vars(GEOID), as.numeric)
+
+unemploy_ppy %>%
+  select(-GEOID, -buyer_county.x, -buyer_county.y, -`unempl_rate_Grand Total`) %>%
+  correlate() %>%
+  filter(str_detect(rowname, "unempl_rate"))
+
+# Let's visualize this.
+``` 
+
+```{r}
+# Graph showing the negative correlation between unemployment rate and dosage unit. It looks like as dosage unit decreased, unemployment rate increase in 2011.
+
+ggplot(unemploy_ppy) +
+  geom_point(aes(unempl_rate_2011, ttl_pills_2011)) +
+  labs(x="unemployment rate", y="ppy", title="NA", caption = "Source: DEA ARCOS database, via Washington Post", fill="buyer_county") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(labels = comma) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_smooth(aes(unempl_rate_2011, ttl_pills_2011), method = "lm", se = FALSE) +
+  geom_text(aes(unempl_rate_2011, ttl_pills_2011, label=buyer_county.x))
+
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+
+
+
+
